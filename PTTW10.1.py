@@ -4,7 +4,7 @@
 #             3) mxd, msd files and readme file for PTTW
 #             4) field description file (fields_description.txt)
 # Output data: 
-#		A zip file named PTTW_Search.zip contains a file geodatabase named PTTW, PTTW.mxd, PTTW.msd, readme file
+#       A zip file named PTTW_Search.zip contains a file geodatabase named PTTW, PTTW.mxd, PTTW.msd, readme file
 #       A zip file named PTTW.zip for shape file on data download page. 
 #       A dbf file named PTTW_DataDownload.dbf to create the PTTW.xls for Excel file on data download page. 
 #       A file geodatabase named PTTW_NAD83 which contains a feature class named PTTW which is loaded to SDE. 
