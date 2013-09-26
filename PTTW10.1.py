@@ -1,18 +1,19 @@
 # Required packages: arcpy from ArcGIS 10.1
-# Required Tools: 7za is used to zip files. It must be located at ..\Tools
 # Input data: 1) A file geodatabase named PTTW contains a feature class named PTTW in a feature dataset named Water tables and a table named PTTW_no_utm. 
 #             2) A file geodatabase named PTTW_Search contains the watershed layer (WSHED_TERT_20110530_Simplify) and Water course layer (OHN_WATERCOURSE_20110530)
 #             3) mxd, msd files and readme file for PTTW
+#             4) field description file (fields_description.txt)
 # Output data: 
-#		A zip file named PTTW_Search contains a file geodatabase named PTTW, PTTW.mxd, PTTW.msd, readme file
-#       A shape file named PTTW_DataDownload for data download page. (The Excel file can be created from the dbf file by using Excel). 
+#		A zip file named PTTW_Search.zip contains a file geodatabase named PTTW, PTTW.mxd, PTTW.msd, readme file
+#       A zip file named PTTW.zip for shape file on data download page. 
+#       A dbf file named PTTW_DataDownload.dbf to create the PTTW.xls for Excel file on data download page. 
 #       A file geodatabase named PTTW_NAD83 which contains a feature class named PTTW which is loaded to SDE. 
 import sys, string, os
 import arcpy
 reload(sys)
 sys.setdefaultencoding("latin-1")
 import pyodbc
-
+import zipfile
 
 # Local variables...
 #WSHED_TERT_20110530_Simplify = "Y:\\Public\\PTTW_Search.gdb\\WSHED_TERT_20110530_Simplify"
@@ -84,6 +85,22 @@ PTTW_DataDownload = OUTPUT_GDB + "\\PTTW_DataDownload"
 arcpy.DeleteField_management(PTTW_DataDownload, "FILENO;CLIENTNO;ADDRESS;CITY;PROVINCE;POSTALCODE;PHONE;OUTOFUTM;NOUTM;ORIGEAST;ORIGNORTH;MUN_CA_AUT;REFERENCE;PERMIT_UC;FILENO_UC;CLNTNM_UC;CLNTNO_UC;ID;LEGEND")
 arcpy.FeatureClassToShapefile_conversion(PTTW_DataDownload, OUTPUT_PATH)
 
+# Compress the shape file for data download page into one zip file named PermitsToTakeWater.zip
+zip = zipfile.ZipFile(OUTPUT_PATH + '\\PermitsToTakeWater.zip', 'w', zipfile.ZIP_DEFLATED)
+zip.write(OUTPUT_PATH + '\\PTTW_DataDownload.dbf', "PermitsToTakeWater.dbf")
+zip.write(OUTPUT_PATH + '\\PTTW_DataDownload.prj', "PermitsToTakeWater.prj")
+zip.write(OUTPUT_PATH + '\\PTTW_DataDownload.sbn', "PermitsToTakeWater.sbn")
+zip.write(OUTPUT_PATH + '\\PTTW_DataDownload.sbx', "PermitsToTakeWater.sbx")
+zip.write(OUTPUT_PATH + '\\PTTW_DataDownload.shp', "PermitsToTakeWater.shp")
+zip.write(OUTPUT_PATH + '\\PTTW_DataDownload.shp.xml', "PermitsToTakeWater.shp.xml")
+zip.write(OUTPUT_PATH + '\\PTTW_DataDownload.shx', "PermitsToTakeWater.shx")
+zip.write(INPUT_PATH + '\\fields_description.txt', "fields_description.txt")
+zip.close()
+
+# Remove the shape file for data download page
+os.system("del " + OUTPUT_PATH + "\\PTTW_DataDownload.s*")
+os.system("del " + OUTPUT_PATH + "\\PTTW_DataDownload.prj")
+
 # Create the feature class for interactive maps which only includes the active permits
 arcpy.FeatureClassToFeatureClass_conversion(PTTW_DataDownload, OUTPUT_GDB, "PTTW_DataDownload_Active", "ACTIVE = 'Yes'", "PERMITNO 'PERMITNO' true true false 50 Text 0 0 ,First,#," +  PTTW_DataDownload + ",PERMITNO,-1,-1;CLIENTNAME 'CLIENTNAME' true true false 200 Text 0 0 ,First,#," +  PTTW_DataDownload + ",CLIENTNAME,-1,-1;PURPOSECAT 'PURPOSECAT' true true false 200 Text 0 0 ,First,#," +  PTTW_DataDownload + ",PURPOSECAT,-1,-1;SPURPOSE 'SPURPOSE' true true false 200 Text 0 0 ,First,#," +  PTTW_DataDownload + ",SPURPOSE,-1,-1;EXPIRYDATE 'EXPIRYDATE' true true false 8 Date 0 0 ,First,#," +  PTTW_DataDownload + ",EXPIRYDATE,-1,-1;ISSUEDDATE 'ISSUEDDATE' true true false 8 Date 0 0 ,First,#," +  PTTW_DataDownload + ",ISSUEDDATE,-1,-1;RENEWDATE 'RENEWDATE' true true false 50 Text 0 0 ,First,#," +  PTTW_DataDownload + ",RENEWDATE,-1,-1;OLDCTYTWN 'OLDCTYTWN' true true false 200 Text 0 0 ,First,#," +  PTTW_DataDownload + ",OLDCTYTWN,-1,-1;P_LOT 'P_LOT' true true false 150 Text 0 0 ,First,#," +  PTTW_DataDownload + ",P_LOT,-1,-1;P_CON 'P_CON' true true false 150 Text 0 0 ,First,#," +  PTTW_DataDownload + ",P_CON,-1,-1;P_MUNICIP 'P_MUNICIP' true true false 200 Text 0 0 ,First,#," +  PTTW_DataDownload + ",P_MUNICIP,-1,-1;P_UPPERT 'P_UPPERT' true true false 150 Text 0 0 ,First,#," +  PTTW_DataDownload + ",P_UPPERT,-1,-1;P_LOWERT 'P_LOWERT' true true false 200 Text 0 0 ,First,#," +  PTTW_DataDownload + ",P_LOWERT,-1,-1;SURFGRND 'SURFGRND' true true false 50 Text 0 0 ,First,#," +  PTTW_DataDownload + ",SURFGRND,-1,-1;EASTING 'EASTING' true true false 8 Double 0 0 ,First,#," +  PTTW_DataDownload + ",EASTING,-1,-1;NORTHING 'NORTHING' true true false 8 Double 0 0 ,First,#," +  PTTW_DataDownload + ",NORTHING,-1,-1;UTMZONE 'UTMZONE' true true false 8 Double 0 0 ,First,#," +  PTTW_DataDownload + ",UTMZONE,-1,-1;MAXL_DAY 'MAXL_DAY' true true false 8 Double 0 0 ,First,#," +  PTTW_DataDownload + ",MAXL_DAY,-1,-1;DAYS_YEAR 'DAYS_YEAR' true true false 8 Double 0 0 ,First,#," +  PTTW_DataDownload + ",DAYS_YEAR,-1,-1;HRS_DAYMAX 'HRS_DAYMAX' true true false 8 Double 0 0 ,First,#," +  PTTW_DataDownload + ",HRS_DAYMAX,-1,-1;L_MINUTE 'L_MINUTE' true true false 8 Double 0 0 ,First,#," +  PTTW_DataDownload + ",L_MINUTE,-1,-1;AMENDED_BY 'AMENDED_BY' true true false 50 Text 0 0 ,First,#," +  PTTW_DataDownload + ",AMENDED_BY,-1,-1;EXPIRED_BY 'EXPIRED_BY' true true false 50 Text 0 0 ,First,#," +  PTTW_DataDownload + ",EXPIRED_BY,-1,-1;PERMIT_END 'PERMIT_END' true true false 8 Date 0 0 ,First,#," +  PTTW_DataDownload + ",PERMIT_END,-1,-1;ORIGEAST 'ORIGEAST' true true false 8 Double 0 0 ,First,#," +  PTTW_DataDownload + ",ORIGEAST,-1,-1;ORIGNORTH 'ORIGNORTH' true true false 8 Double 0 0 ,First,#," +  PTTW_DataDownload + ",ORIGNORTH,-1,-1;ACTIVE 'ACTIVE' true true false 3 Text 0 0 ,First,#," +  PTTW_DataDownload + ",ACTIVE,-1,-1;MUN_CA_AUT 'MUN_CA_AUT' true true false 50 Text 0 0 ,First,#," +  PTTW_DataDownload + ",MUN_CA_AUT,-1,-1;REFERENCE 'REFERENCE' true true false 50 Text 0 0 ,First,#," +  PTTW_DataDownload + ",REFERENCE,-1,-1;LATITUDE 'LATITUDE' true true false 8 Double 0 0 ,First,#," +  PTTW_DataDownload + ",LATITUDE,-1,-1;LONGITUDE 'LONGITUDE' true true false 8 Double 0 0 ,First,#," +  PTTW_DataDownload + ",LONGITUDE,-1,-1", "")
 PTTW_DataDownload_Active = OUTPUT_GDB + "\\PTTW_DataDownload_Active"
@@ -126,9 +143,8 @@ f = open (OUTPUT_PATH + "\\readme_PTTW_Search.txt","w")
 f.write(data)
 f.close()
 
-# Compress the files together into a zip file
-#from zipfile_infolist import print_info
-import zipfile, os
+# Compress the msd, mxd, readme.txt and file geodatabase together into a zip file named PTTW_Search.zip, which will be send to web service publisher. 
+
 target_dir = OUTPUT_PATH + '\\PTTW_Search.gdb'
 zip = zipfile.ZipFile(OUTPUT_PATH + '\\PTTW_Search.zip', 'w', zipfile.ZIP_DEFLATED)
 rootlen = len(target_dir) + 1
@@ -141,17 +157,11 @@ zip.write(OUTPUT_PATH + '\\PTTW_Search.mxd', "PTTW_Search.mxd")
 zip.write(OUTPUT_PATH + '\\readme_PTTW_Search.txt', "readme_PTTW_Search.txt")
 zip.close()
 
-#print
-#print_info(OUTPUT_PATH + '\\PTTW_Search.zip')
-
-#os.system("cd output")
-#os.system("..\..\Tools\7za a -tzip PTTW_Search.zip PTTW_Search.gdb PTTW_Search.msd PTTW_Search.mxd readme_PTTW_Search.txt")
+# Remove the msd, mxd, readme.txt and file geodatabase. 
 os.system("del " + OUTPUT_PATH + "\\PTTW_Search.msd")
 os.system("del " + OUTPUT_PATH + "\\PTTW_Search.mxd")
 os.system("del " + OUTPUT_PATH + "\\readme_PTTW_Search.txt")
 os.system("rmdir " + OUTPUT_PATH + "\\PTTW_Search.gdb /s /q")
-#os.system("cd ..")
-
 
 
 
